@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Input Tugas Karyawan</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 1rem;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      margin: 0.75rem 0 0.3rem;
+      font-weight: 600;
+      color: #444;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+    button {
+      padding: 0.7rem 1.2rem;
+      margin-top: 1rem;
+      margin-right: 0.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button[type="submit"] {
+      background-color: #1976d2;
+      color: white;
+    }
+    #downloadBtn {
+      background-color: #4caf50;
+      color: white;
+      width: 100%;
+      margin-top: 1rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+    }
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: #f0f0f0;
+    }
+    .edit-btn {
+      background: #fdd835;
+      color: #333;
+    }
+    .delete-btn {
+      background: #e53935;
+      color: white;
+    }
+    @media (max-width: 600px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      thead { display: none; }
+      tr {
+        margin-bottom: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 0.75rem;
+        background: #fcfcfc;
+      }
+      td {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border: none;
+      }
+      td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #444;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Input Tugas Karyawan</h2>
+    <form id="inputForm">
+      <label for="tanggal">Tanggal:</label>
+      <input type="date" id="tanggal" required />
+
+      <label for="job">Job Description:</label>
+      <input type="text" id="job" required />
+
+      <label for="nama">Nama Karyawan:</label>
+      <select id="nama" required>
+        <option value="" disabled selected>Pilih nama</option>
+        <option>Pohara Ayub</option>
+        <option>Sadulloh</option>
+        <option>Edi Ahmad Jubaedi</option>
+        <option>Saiful Bahri</option>
+        <option>Wahidin</option>
+        <option>Amrullah</option>
+        <option>Ade Surahman</option>
+        <option>Siti Maemunah</option>
+        <option>Sulaiman</option>
+        <option>Muhammad Toni</option>
+        <option>M. Rifai</option>
+      </select>
+
+      <button type="submit">Tambah</button>
+    </form>
+
+    <button id="downloadBtn">Download Excel</button>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Job Description</th>
+          <th>Nama Karyawan</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const hariIndo = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const bulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+    const tanggalInput = document.getElementById("tanggal");
+    const jobInput = document.getElementById("job");
+    const namaInput = document.getElementById("nama");
+    const form = document.getElementById("inputForm");
+    const tableBody = document.getElementById("tableBody");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    let data = [];
+
+    tanggalInput.addEventListener("change", () => {
+      const dateObj = new Date(tanggalInput.value);
+      const hari = hariIndo[dateObj.getDay()];
+
+      if (hari === "Minggu") {
+        jobInput.value = "OFF";
+        namaInput.value = "";
+        namaInput.disabled = true;
+      } else {
+        jobInput.value = "";
+        namaInput.disabled = false;
+      }
+    });
+
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const dateObj = new Date(tanggalInput.value);
+      const hari = hariIndo[dateObj.getDay()];
+      const bulan = bulanIndo[dateObj.getMonth()];
+      const formatted = `${hari}, ${dateObj.getDate().toString().padStart(2, "0")} ${bulan} ${dateObj.getFullYear()}`;
+
+      const job = (hari === "Minggu") ? "OFF" : jobInput.value;
+      const nama = (hari === "Minggu") ? "OFF" : namaInput.value;
+
+      const newRow = {
+        tanggal: formatted,
+        job: job,
+        nama: nama,
+        rawDate: tanggalInput.value
+      };
+
+      data.push(newRow);
+      updateTable();
+      form.reset();
+      namaInput.disabled = false;
+    };
+
+    function updateTable() {
+      tableBody.innerHTML = "";
+      data.forEach((row, index) => {
+        const hari = row.tanggal.split(",")[0];
+        let warna = "";
+        if (hari === "Sabtu") warna = 'style="background-color:#e8f5e9;"';
+        else if (hari === "Minggu") warna = 'style="background-color:#ffebee;"';
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td data-label="Tanggal" ${warna}>${row.tanggal}</td>
+          <td data-label="Job">${row.job}</td>
+          <td data-label="Nama">${row.nama}</td>
+          <td data-label="Aksi">
+            <button class="edit-btn" onclick="editRow(${index})">Edit</button>
+            <button class="delete-btn" onclick="deleteRow(${index})">Hapus</button>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function deleteRow(index) {
+      data.splice(index, 1);
+      updateTable();
+    }
+
+    function editRow(index) {
+      const row = data[index];
+      tanggalInput.value = row.rawDate;
+      jobInput.value = (row.job === "OFF") ? "" : row.job;
+      namaInput.value = (row.nama === "OFF") ? "" : row.nama;
+      namaInput.disabled = (row.nama === "OFF");
+      data.splice(index, 1);
+      updateTable();
+    }
+
+    downloadBtn.onclick = () => {
+      const exportData = data.map(({ rawDate, ...rest }) => rest);
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Tugas");
+      XLSX.writeFile(wb, "data_tugas.xlsx");
+    };
+  </script>
+</body>
+</html>
